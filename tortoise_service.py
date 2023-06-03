@@ -88,7 +88,7 @@ class EnvControl:
         self.curr_datetime = datetime.datetime.now(TZ)
         self.curr_time = time.time()
         self.HHMM_time = get_HHMM_time(self.curr_datetime)
-        self.curr_TEMP = poll_thermometer()
+        self.curr_temp = poll_thermometer()
         self.heartbeat = 0
 
         # UV
