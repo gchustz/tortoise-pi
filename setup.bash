@@ -13,7 +13,7 @@ cp tortoise_gpio_cleanup.service $SYSTEMD_PATH
 sudo systemctl daemon-reload
 sudo systemctl enable tortoise_setup.service
 sudo systemctl enable tortoise_gpio.service
-sudo systemctl enable tortoise_cleanup.service
+sudo systemctl enable tortoise_gpio_cleanup.service
 
 sudo echo "dtoverlay=w1-gpio" >> /boot/config.txt
 
