@@ -75,6 +75,7 @@ def purge_old_files(purge_period, directory, filename_delim='_') -> None:
 # Main class
 class EnvControl:
     # Constants
+    RELAY_CYCLE_PERIOD = 10
     UV_GPIO_CHANNEL = RELAY_CHANNELS[1]
     HEAT_LAMP_GPIO_CHANNELS = [
         RELAY_CHANNELS[2],
@@ -154,6 +155,10 @@ class EnvControl:
         self.logpath = f'{self.logdir}/tortoise_gpio_{int(self.curr_log_time)}.log'
 
     def update(self):
+
+        # Cycle relays every couple of hours and on the first start
+        if self.iterations % (4*3600) == 0: # Note iterations are not an exact second
+            self.cycle_relays()
         
         # Times
         self.curr_datetime = datetime.datetime.now(TZ)
@@ -238,6 +243,14 @@ class EnvControl:
 
         with open(self.logpath, 'a') as logf:
             logf.write(log_str)
+
+    def cycle_relays(self):
+        for channel in [self.UV_GPIO_CHANNEL, *self.HEAT_LAMP_GPIO_CHANNELS]:
+            GPIO.output(channel, RELAY_OPEN)
+            time.sleep(self.RELAY_CYCLE_PERIOD)
+            GPIO.output(channel, RELAY_CLOSED)
+            time.sleep(self.RELAY_CYCLE_PERIOD)
+            GPIO.output(channel, RELAY_OPEN)
 
     def loop(self):
         try:
