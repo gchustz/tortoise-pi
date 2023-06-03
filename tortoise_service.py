@@ -5,6 +5,9 @@ import datetime
 import pytz
 import sys
 import os
+import math 
+
+# TODO: Change directory, file, and path operations to pathlib
 
 # globals
 RELAY_CLOSED = GPIO.LOW
@@ -71,7 +74,6 @@ def purge_old_files(purge_period, directory, filename_delim='_') -> None:
                 # Do not want to kill the program on a file rotation issue
                 print(e)
 
-
 # Main class
 class EnvControl:
     # Constants
@@ -94,16 +96,23 @@ class EnvControl:
         # UV
         self.UV_CMD_STATE = RELAY_OPEN
         self.UV_GPIO_STATE = None
-        self.UV_TURN_ON_TIME = args.UV_ON_HHMM
-        self.UV_TURN_OFF_TIME = args.UV_OFF_HHMM
+        self.UV_TURN_ON_TIME = args.DAY_START_HHMM
+        self.UV_TURN_OFF_TIME = args.NIGHT_START_HHMM
         # TODO: change to day/night 
 
         # heat
         self.HEAT_CMD_STATE = RELAY_OPEN
         self.HEAT_GPIO_STATE = None 
-        self.HEAT_TURN_ON_TEMP = args.TEMP_HEAT_ON
-        self.HEAT_TURN_OFF_TEMP = args.TEMP_HEAT_OFF 
-        # TODO: add night temperature reduction
+        self.TEMP_MAX_NOMINAL = args.TEMP_DAYTIME
+        self.TEMP_MIN_NOMINAL = args.TEMP_NIGHTTIME
+        self.TEMP_TOLERANCE = args.TEMP_CONTROL_BOUNDS
+
+        assert self.TEMP_MAX_NOMINAL >= self.TEMP_MIN_NOMINAL
+
+        self.TEMP_AVG = (self.TEMP_MAX_NOMINAL + self.TEMP_MIN_NOMINAL) / 2
+        self.TEMP_SWING = (self.TEMP_MAX_NOMINAL - self.TEMP_MIN_NOMINAL) / 2
+        self.OFFSET_TIME = self.UV_TURN_ON_TIME // 100 
+        # Using per hour temperature to avoid heat lamp rapid switching
         
         self.HEAT_CRIT_LOW = args.TEMP_LOW_CRITICAL
         self.HEAT_CRIT_HIGH = args.TEMP_HIGH_CRITICAL
@@ -191,6 +200,12 @@ class EnvControl:
             self.UV_GPIO_STATE = self.UV_CMD_STATE
 
         # Temp
+        hr = self.HHMM_time // 100
+        self.NOMINAL_TEMP = self.TEMP_SWING * math.sin((hr-self.OFFSET_TIME)/12*math.pi) + self.TEMP_AVG
+        
+        self.HEAT_TURN_ON_TEMP = self.NOMINAL_TEMP + self.TEMP_TOLERANCE
+        self.HEAT_TURN_OFF_TEMP = self.NOMINAL_TEMP - self.TEMP_TOLERANCE
+
         if self.HEAT_CMD_STATE == RELAY_OPEN and (self.curr_temp <= self.HEAT_TURN_ON_TEMP):
             self.HEAT_CMD_STATE = RELAY_CLOSED
 
@@ -202,6 +217,8 @@ class EnvControl:
                 GPIO.output(heat_channel, self.HEAT_CMD_STATE)
 
             self.HEAT_GPIO_STATE = self.HEAT_CMD_STATE
+
+        # TODO: add heatlamp switching when there's multiple heatlamps
 
         # TODO: add timeout for heat lamp
         
@@ -295,13 +312,14 @@ if __name__ == '__main__':
     parser.add_argument('--file-rotation-period', type=int, default=86400, help='Create a new log and data file after this time in seconds')
     parser.add_argument('--file-deletion-period', type=int, default=1000000, help='Delete old files after this period in seconds')
 
-    parser.add_argument('--UV-ON-HHMM', type=int, default=800, help='e.g. 800 for 8AM, 2000 for 8PM')
-    parser.add_argument('--UV-OFF-HHMM', type=int, default=1900, help='e.g. 1900 for 7PM')
+    parser.add_argument('--DAY-START-HHMM', type=int, default=800, help='e.g. 800 for 8AM, 2000 for 8PM')
+    parser.add_argument('--NIGHT-START-HHMM', type=int, default=1900, help='e.g. 1900 for 7PM')
     
     #parser.add_argument('--heat_lamp_relays', type=int, nargs='+', default=[2], help)
-    parser.add_argument('--TEMP-HEAT-ON', type=int, default=30, help='Lowerbound Temp in Celcius to turn on heatlamp')
-    parser.add_argument('--TEMP-HEAT-OFF', type=int, default=33, help='Upperbound Temp in Celcius to turn off the heatlamp')
-    parser.add_argument('--TEMP-LOW-CRITICAL', type=int, default=27, help='Lower Alarm Temperature in Celcius')
+    parser.add_argument('--TEMP-DAYTIME', type=int, default=32, help='Temperature (Celcius) target at ~3PM (coldest part of the night)')
+    parser.add_argument('--TEMP-NIGHTTIME', type=int, default=27, help='Temperature (Celcius) target at ~3AM (hottest part of the day)')
+    parser.add_argument('--TEMP-CONTROL-BOUNDS', type=int, default=1, help='Temperature swing allowed away from nominal for bang-bang control.')
+    parser.add_argument('--TEMP-LOW-CRITICAL', type=int, default=25, help='Lower Alarm Temperature in Celcius')
     parser.add_argument('--TEMP-HIGH-CRITICAL', type=int, default=40, help='Upper Alarm Temperature in Celcius')
     
     args = parser.parse_args()
