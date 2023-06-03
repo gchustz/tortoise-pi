@@ -85,10 +85,10 @@ class EnvControl:
     def __init__(self, args): 
 
         self.period = args.period
-        self.curr_datetime = ''
+        self.curr_datetime = datetime.datetime.now(TZ)
         self.curr_time = time.time()
-        self.HHMM_time = 0
-        self.curr_TEMP = 0.
+        self.HHMM_time = get_HHMM_time(self.curr_datetime)
+        self.curr_TEMP = poll_thermometer()
         self.heartbeat = 0
 
         # UV
