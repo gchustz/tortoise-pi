@@ -138,6 +138,9 @@ class EnvControl:
         
         # looping
         self.iterations = 0
+
+        # Cycle the relay twice on first start
+        self.cycle_relays()
     
     def new_data_file(self):
         purge_old_files(self.file_deletion_period, self.datadir)
@@ -253,6 +256,7 @@ class EnvControl:
             GPIO.output(channel, RELAY_OPEN)
 
     def loop(self):
+        # Add kernel interrupt handling for graceful shutdown
         try:
             while True:
                 self.update()
