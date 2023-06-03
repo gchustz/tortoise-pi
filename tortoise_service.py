@@ -249,6 +249,7 @@ class EnvControl:
 
     def cycle_relays(self):
         for channel in [self.UV_GPIO_CHANNEL, *self.HEAT_LAMP_GPIO_CHANNELS]:
+            self.log(f'Cycling Relay GPIO Channel {channel}')
             GPIO.output(channel, RELAY_OPEN)
             time.sleep(self.RELAY_CYCLE_PERIOD)
             GPIO.output(channel, RELAY_CLOSED)
