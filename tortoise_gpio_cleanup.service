@@ -1,0 +1,16 @@
+[Unit]
+Description=Turns off gpio
+Before=shutdown.target
+After=tortoise_gpio.service
+
+[Service]
+Type=oneshot
+ExecStart=
+ExecStart=/home/geo/dev/gpio/switch-gpio 26 1
+ExecStart=/home/geo/dev/gpio/switch-gpio 20 1
+ExecStart=/home/geo/dev/gpio/switch-gpio 21 1
+#Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target

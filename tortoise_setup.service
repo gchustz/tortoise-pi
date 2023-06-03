@@ -1,0 +1,18 @@
+[Unit]
+Description=Sets up raspberry pi
+After=network.target
+Before=tortoise_gpio.service
+
+[Service]
+Type=oneshot
+ExecStart=
+ExecStart=modprobe w1-gpio
+ExecStart=modprobe w1-therm
+ExecStart=mkdir -p -m 777 /run/tortoise_env
+ExecStart=mkdir -p -m 777 /var/log/tortoise_env/logs
+ExecStart=mkdir -p -m 777 /var/log/tortoise_env/data
+#Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target

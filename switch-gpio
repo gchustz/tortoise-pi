@@ -1,0 +1,19 @@
+#! /bin/bash
+
+CHANNEL=$1
+VALUE=$2
+DELAY=1
+INITIAL_DELAY=10
+
+sleep $INITIAL_DELAY
+
+echo $CHANNEL > /sys/class/gpio/export
+sleep $DELAY
+echo out > /sys/class/gpio/gpio$CHANNEL/direction
+sleep $DELAY
+echo $VALUE > /sys/class/gpio/gpio$CHANNEL/value
+
+sleep $DELAY
+echo $CHANNEL > /sys/class/gpio/unexport
+
+exit

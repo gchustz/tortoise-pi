@@ -1,0 +1,14 @@
+[Unit]
+Description=Runs the python gpio script
+After=tortoise_setup.service
+Before=tortoise_gpio_cleanup.service
+
+[Service]
+Type=simple
+ExecStart=
+ExecStart=/usr/bin/python3 /usr/bin/tortoise_service.py /var/log/tortoise_env/logs /var/log/tortoise_env/logs /run/tortoise_env
+#Restart=on-failure
+User=geo
+
+[Install]
+WantedBy=multi-user.target
