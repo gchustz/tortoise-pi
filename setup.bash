@@ -4,6 +4,7 @@
 cd ../tortoise-pi
 
 cp tortoise_service.py /usr/bin/
+cp switch-gpio /usr/bin
 
 SYSTEMD_PATH=/usr/lib/systemd/system
 cp tortoise_setup.service $SYSTEMD_PATH
