@@ -15,7 +15,7 @@ sudo systemctl enable tortoise_setup.service
 sudo systemctl enable tortoise_gpio.service
 sudo systemctl enable tortoise_gpio_cleanup.service
 
-sudo echo "dtoverlay=w1-gpio" >> /boot/config.txt
+sudo grep -qxF "dtoverlay=w1-gpio" /boot/config.txt || sudo echo "dtoverlay=w1-gpio" >> /boot/config.txt
 
 pip3 install -r requirements.txt
 
