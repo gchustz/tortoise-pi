@@ -107,6 +107,7 @@ class EnvControl:
         self.TEMP_MAX_NOMINAL = args.TEMP_DAYTIME
         self.TEMP_MIN_NOMINAL = args.TEMP_NIGHTTIME
         self.TEMP_TOLERANCE = args.TEMP_CONTROL_BOUNDS
+        self.NOMINAL_TEMP = self.TEMP_MIN_NOMINAL
 
         assert self.TEMP_MAX_NOMINAL >= self.TEMP_MIN_NOMINAL
 
