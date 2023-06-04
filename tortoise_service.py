@@ -8,6 +8,7 @@ import os
 import math 
 
 # TODO: Change directory, file, and path operations to pathlib
+# TODO: Change non-global values to normal snake case 
 
 # globals
 RELAY_CLOSED = GPIO.LOW
@@ -116,7 +117,7 @@ class EnvControl:
         
         self.HEAT_CRIT_LOW = args.TEMP_LOW_CRITICAL
         self.HEAT_CRIT_HIGH = args.TEMP_HIGH_CRITICAL
-        assert self.HEAT_CRIT_LOW < self.HEAT_TURN_ON_TEMP < self.HEAT_TURN_OFF_TEMP < self.HEAT_CRIT_HIGH
+        assert self.HEAT_CRIT_LOW < self.TEMP_MIN_NOMINAL - self.TEMP_TOLERANCE < self.TEMP_MAX_NOMINAL + self.TEMP_TOLERANCE < self.HEAT_CRIT_HIGH
         
         # File rotation parameters
         self.file_rotation_period = args.file_rotation_period
@@ -220,7 +221,7 @@ class EnvControl:
 
         # TODO: add heatlamp switching when there's multiple heatlamps
 
-        # TODO: add timeout for heat lamp
+        # TODO: add timeout for heat lamp to prevent rapid switching
         
         # TODO: add alarms  for heat
 
@@ -272,6 +273,9 @@ class EnvControl:
             GPIO.output(channel, RELAY_CLOSED)
             time.sleep(self.RELAY_CYCLE_PERIOD)
             GPIO.output(channel, RELAY_OPEN)
+
+        self.UV_GPIO_STATE = RELAY_OPEN
+        self.HEAT_GPIO_STATE = RELAY_OPEN
 
     def loop(self):
         # Add kernel interrupt handling for graceful shutdown
