@@ -159,7 +159,7 @@ class EnvControl:
         self.curr_data_time = time.time()
         self.datapath = f'{self.datadir}/tortoise_gpio_{int(self.curr_data_time)}.csv'
 
-        self.append_data('iter', 'datetime', 'curr_temp', 'heat_state', 'curr_time', 'uv_state')
+        self.append_data('iter', 'datetime', 'curr_temp', 'min_setpoint', 'max_setpoint', 'heat_state', 'curr_time', 'uv_state')
 
     def new_log_file(self):
         purge_old_files(self.file_deletion_period, self.logdir)
@@ -228,7 +228,7 @@ class EnvControl:
 
         self.push_linuxio(heartbeat=self.heartbeat, logpath=self.logpath, datapath=self.datapath, iter=self.iterations, temp=self.curr_temp, uv_light=self.UV_GPIO_STATE, heat_light=self.HEAT_GPIO_STATE)
 
-        self.append_data(self.iterations, self.curr_datetime, self.curr_temp, self.HEAT_CMD_STATE, self.HHMM_time, self.UV_CMD_STATE)
+        self.append_data(self.iterations, self.curr_datetime, self.curr_temp, self.HEAT_TURN_ON_TEMP, self.HEAT_TURN_OFF_TEMP, self.HEAT_CMD_STATE, self.HHMM_time, self.UV_CMD_STATE)
         
         self.log()
         self.iterations += 1
