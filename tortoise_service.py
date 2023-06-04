@@ -252,7 +252,7 @@ class EnvControl:
     def log(self, *lines):
         log_str = f'{self.iterations} {self.curr_datetime}: | CLOSED RELAY={RELAY_CLOSED} '
 
-        temp_state_str = f'| TEMP {self.HEAT_CRIT_LOW}/{self.NOMINAL_TEMP - self.TEMP_TOLERANCE}/{self.curr_temp}/{self.NOMINAL_TEMP + self.TEMP_TOLERANCE}/{self.HEAT_CRIT_HIGH} C -> [{self.HEAT_GPIO_STATE}/{self.HEAT_CMD_STATE}] '
+        temp_state_str = f'| TEMP {self.HEAT_CRIT_LOW}/{self.NOMINAL_TEMP - self.TEMP_TOLERANCE:8.3f}/{self.curr_temp}/{self.NOMINAL_TEMP + self.TEMP_TOLERANCE:8.3f}/{self.HEAT_CRIT_HIGH} C -> [{self.HEAT_GPIO_STATE}/{self.HEAT_CMD_STATE}] '
         log_str += temp_state_str
 
         uv_state_str = f'| UV {self.UV_TURN_ON_TIME}/{self.HHMM_time}/{self.UV_TURN_OFF_TIME} -> [{self.UV_GPIO_STATE}/{self.UV_CMD_STATE}] '
