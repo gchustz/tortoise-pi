@@ -321,8 +321,8 @@ if __name__ == '__main__':
     parser.add_argument('--NIGHT-START-HHMM', type=int, default=1900, help='e.g. 1900 for 7PM')
     
     #parser.add_argument('--heat_lamp_relays', type=int, nargs='+', default=[2], help)
-    parser.add_argument('--TEMP-DAYTIME', type=int, default=32, help='Temperature (Celcius) target at ~3PM (coldest part of the night)')
-    parser.add_argument('--TEMP-NIGHTTIME', type=int, default=27, help='Temperature (Celcius) target at ~3AM (hottest part of the day)')
+    parser.add_argument('--TEMP-DAYTIME', type=int, default=34, help='Temperature (Celcius) target at ~3PM (coldest part of the night)')
+    parser.add_argument('--TEMP-NIGHTTIME', type=int, default=29, help='Temperature (Celcius) target at ~3AM (hottest part of the day)')
     parser.add_argument('--TEMP-CONTROL-BOUNDS', type=int, default=1, help='Temperature swing allowed away from nominal for bang-bang control.')
     parser.add_argument('--TEMP-LOW-CRITICAL', type=int, default=25, help='Lower Alarm Temperature in Celcius')
     parser.add_argument('--TEMP-HIGH-CRITICAL', type=int, default=40, help='Upper Alarm Temperature in Celcius')
