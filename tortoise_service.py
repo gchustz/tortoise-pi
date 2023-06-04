@@ -205,8 +205,8 @@ class EnvControl:
         hr = self.HHMM_time // 100
         self.NOMINAL_TEMP = self.TEMP_SWING * math.sin((hr-self.OFFSET_TIME)/12*math.pi) + self.TEMP_AVG
         
-        self.HEAT_TURN_ON_TEMP = self.NOMINAL_TEMP + self.TEMP_TOLERANCE
-        self.HEAT_TURN_OFF_TEMP = self.NOMINAL_TEMP - self.TEMP_TOLERANCE
+        self.HEAT_TURN_ON_TEMP = self.NOMINAL_TEMP - self.TEMP_TOLERANCE
+        self.HEAT_TURN_OFF_TEMP = self.NOMINAL_TEMP + self.TEMP_TOLERANCE
 
         if self.HEAT_CMD_STATE == RELAY_OPEN and (self.curr_temp <= self.HEAT_TURN_ON_TEMP):
             self.HEAT_CMD_STATE = RELAY_CLOSED
