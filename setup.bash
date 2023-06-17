@@ -20,5 +20,9 @@ sudo grep -qxF "dtoverlay=w1-gpio" /boot/config.txt || sudo echo "dtoverlay=w1-g
 
 pip3 install -r requirements.txt
 
+#mkdir ~/.tortoise_env
+#touch ~/.tortoise_env/token
+#touch ~/.tortoise_env/key
+
 echo "Complete"
 echo "Please reboot..."

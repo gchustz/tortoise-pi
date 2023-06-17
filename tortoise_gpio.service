@@ -6,7 +6,7 @@ Before=tortoise_gpio_cleanup.service
 [Service]
 Type=simple
 ExecStart=
-ExecStart=/usr/bin/python3 /usr/bin/tortoise_service.py /var/log/tortoise_env/data /var/log/tortoise_env/logs /run/tortoise_env
+ExecStart=/usr/bin/python3 /usr/bin/tortoise_service.py /var/log/tortoise_env/data /var/log/tortoise_env/logs /run/tortoise_env --USE-PUSHOVER --PUSHOVER-KEY-FILE /home/geo/.tortoise_env/key --PUSHOVER-TOKEN-FILE /home/geo/.tortoise_env/token
 #Restart=on-failure
 User=geo
 

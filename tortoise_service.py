@@ -6,6 +6,8 @@ import pytz
 import sys
 import os
 import math 
+import http.client
+import urllib
 
 # TODO: Change directory, file, and path operations to pathlib
 # TODO: Change non-global values to normal snake case 
@@ -86,13 +88,19 @@ class EnvControl:
     ]
 
     def __init__(self, args): 
-
+        # looping
+        self.iterations = 0
+        
+        # Config
         self.period = args.period
         self.curr_datetime = datetime.datetime.now(TZ)
         self.curr_time = time.time()
         self.HHMM_time = get_HHMM_time(self.curr_datetime)
         self.curr_temp = poll_thermometer()
         self.heartbeat = 0
+
+        # Alarms
+        self.alarms = []
 
         # UV
         self.UV_CMD_STATE = RELAY_OPEN
@@ -146,9 +154,24 @@ class EnvControl:
         assert os.path.isdir(self.logdir)
         
         self.new_log_file()
+
+        # Alarm notifications
+        if args.USE_PUSHOVER:
+
+            with open(args.PUSHOVER_KEY_FILE, 'r') as f:
+                self.api_key = f.read().strip().replace('\n','')
+
+            with open(args.PUSHOVER_TOKEN_FILE, 'r') as f:
+                self.api_token = f.read().strip().replace('\n','')
+
+            self.use_pushover = (not self.api_key is None) and (not self.api_token is None)
+
+            self.log(self.use_pushover, self.api_key, self.api_token)
+
+            self.send_pushover('Starting up!')
         
-        # looping
-        self.iterations = 0
+        else:
+            self.use_pushover = False 
 
         # Cycle the relay twice on first start
         self.cycle_relays()
@@ -220,17 +243,29 @@ class EnvControl:
 
             self.HEAT_GPIO_STATE = self.HEAT_CMD_STATE
 
+        if self.HEAT_CRIT_HIGH <= self.curr_temp:
+            self.alarms.append(f'Temperature {self.curr_temp} is above the alarm temp of {self.HEAT_CRIT_HIGH}!!!')
+
+        if self.curr_temp <= self.HEAT_CRIT_LOW:
+            self.alarms.append(f'Temperature {self.curr_temp} is lower than the alarm themp of {self.HEAT_CRIT_LOW}!!!')
+        
         # TODO: add heatlamp switching when there's multiple heatlamps
 
         # TODO: add timeout for heat lamp to prevent rapid switching
         
         # TODO: add alarms  for heat
 
-        self.push_linuxio(heartbeat=self.heartbeat, logpath=self.logpath, datapath=self.datapath, iter=self.iterations, temp=self.curr_temp, uv_light=self.UV_GPIO_STATE, heat_light=self.HEAT_GPIO_STATE)
+        self.push_linuxio(heartbeat=self.heartbeat, logpath=self.logpath, datapath=self.datapath, iter=self.iterations, temp=self.curr_temp, uv_light=self.UV_GPIO_STATE, heat_light=self.HEAT_GPIO_STATE, alarms='\n'.join(self.alarms))
 
         self.append_data(self.iterations, self.curr_datetime, self.curr_temp, self.HEAT_TURN_ON_TEMP, self.HEAT_TURN_OFF_TEMP, self.HEAT_CMD_STATE, self.HHMM_time, self.UV_CMD_STATE)
         
-        self.log()
+        self.log(*self.alarms)
+
+        if len(self.alarms) > 0 and self.use_pushover:
+            self.send_pushover(*self.alarms)
+
+        self.alarms = []
+
         self.iterations += 1
 
     def push_linuxio(self, **data_points):
@@ -259,12 +294,25 @@ class EnvControl:
         log_str += uv_state_str
 
         for line in lines:
-            log_str += '\nERROR: ' + str(line)
+            log_str += '\n' + str(line)
 
         log_str += '\n'
 
         with open(self.logpath, 'a') as logf:
             logf.write(log_str)
+
+    def send_pushover(self, *lines):
+        try:
+            conn = http.client.HTTPSConnection("api.pushover.net:443")
+            conn.request("POST", "/1/messages.json",
+            urllib.parse.urlencode({
+                "token": self.api_token,
+                "user": self.api_key,
+                "message": '\n'.join(lines),
+            }), { "Content-type": "application/x-www-form-urlencoded" })
+            conn.getresponse()
+        except Exception as e:
+            self.log(str(e))
 
     def cycle_relays(self):
         for channel in [self.UV_GPIO_CHANNEL, *self.HEAT_LAMP_GPIO_CHANNELS]:
@@ -290,7 +338,10 @@ class EnvControl:
             return 0
 
         except Exception as e:
-            self.log(e)
+            self.log(str(e))
+
+            if self.use_pushover:
+                self.send_pushover(str(e))
             return 1
 
 # Main loop
@@ -321,11 +372,15 @@ if __name__ == '__main__':
     parser.add_argument('--NIGHT-START-HHMM', type=int, default=1900, help='e.g. 1900 for 7PM')
     
     #parser.add_argument('--heat_lamp_relays', type=int, nargs='+', default=[2], help)
-    parser.add_argument('--TEMP-DAYTIME', type=int, default=34, help='Temperature (Celcius) target at ~3PM (coldest part of the night)')
-    parser.add_argument('--TEMP-NIGHTTIME', type=int, default=29, help='Temperature (Celcius) target at ~3AM (hottest part of the day)')
+    parser.add_argument('--TEMP-DAYTIME', type=int, default=34, help='Temperature (Celcius) target at ~3PM (hottest part of the day)')
+    parser.add_argument('--TEMP-NIGHTTIME', type=int, default=29, help='Temperature (Celcius) target at ~3AM (coldest part of the night)')
     parser.add_argument('--TEMP-CONTROL-BOUNDS', type=int, default=1, help='Temperature swing allowed away from nominal for bang-bang control.')
     parser.add_argument('--TEMP-LOW-CRITICAL', type=int, default=25, help='Lower Alarm Temperature in Celcius')
     parser.add_argument('--TEMP-HIGH-CRITICAL', type=int, default=40, help='Upper Alarm Temperature in Celcius')
+    
+    parser.add_argument('--USE-PUSHOVER', action='store_true', default=False, help='This uses the pushover API key and token stored in your linux environment as PUSHOVER_TOKEN, PUSHOVER_KEY')
+    parser.add_argument('--PUSHOVER-TOKEN-FILE', type=str, default=None, help='File which contains the pushover token')
+    parser.add_argument('--PUSHOVER-KEY-FILE', type=str, default=None, help='File which contains the pushover key')
     
     args = parser.parse_args()
     
